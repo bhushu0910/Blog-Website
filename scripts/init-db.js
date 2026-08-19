@@ -27,7 +27,8 @@ const host = process.env.DB_HOST || 'localhost';
 const port = parseInt(process.env.DB_PORT || '3306', 10);
 const user = process.env.DB_USER || 'root';
 const password = process.env.DB_PASSWORD || '';
-const database = process.env.DB_NAME || 'blog_database';
+const database = process.env.DB_NAME || 'defaultdb';
+const isRemote = host !== 'localhost' && host !== '127.0.0.1';
 
 async function initDB() {
   console.log(`Connecting to MySQL server at ${host}:${port} as ${user}...`);
@@ -39,18 +40,18 @@ async function initDB() {
       port,
       user,
       password,
+      database,
+      ssl: isRemote ? { rejectUnauthorized: false } : undefined,
       multipleStatements: true,
     });
 
-    console.log('Connected to MySQL successfully.');
+    console.log(`Connected to MySQL database '${database}' successfully.`);
 
     // Execute schema
     const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
     console.log('Executing database schema initialization...');
     await connection.query(schemaSql);
     console.log('Schema created/verified successfully.');
-
-    await connection.query(`USE \`${database}\``);
 
     // Seed default admin
     const defaultAdminUsername = 'admin';
@@ -75,11 +76,6 @@ async function initDB() {
   } catch (error) {
     console.error('Error initializing database:');
     console.error(error);
-    if (error.code === 'ECONNREFUSED') {
-      console.error('\n--> TROUBLESHOOTING: Connection refused. Is your local MySQL server service started on port 3306?');
-    } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-      console.error('\n--> TROUBLESHOOTING: Access denied. Please check your DB_USER and DB_PASSWORD in .env.local.');
-    }
     process.exit(1);
   } finally {
     if (connection) await connection.end();

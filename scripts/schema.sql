@@ -1,8 +1,3 @@
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS `blog_database` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-USE `blog_database`;
-
 -- Table: users
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
